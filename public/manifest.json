@@ -1,0 +1,20 @@
+{
+  "name": "معمل ومبيعات التجميل - CosineLab PWA",
+  "short_name": "CosineLab",
+  "description": "حاسبة تركيبات مستحضرات التجميل والتسعير ونقطة البيع الفورية",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#1E3A3A",
+  "theme_color": "#1E3A3A",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
+
