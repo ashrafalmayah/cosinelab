@@ -127,7 +127,7 @@ export const RestockModal: React.FC = () => {
               <input
                 type="number"
                 min="1"
-                step={type === 'raw' ? '50' : '1'}
+                step="any"
                 value={qty}
                 onChange={e => setQty(Math.max(0, parseFloat(e.target.value) || 0))}
                 className="flex-1 px-3 py-2.5 rounded-xl border border-slate-300 font-extrabold text-sm text-center bg-slate-50 focus:bg-white focus:outline-none focus:border-emeraldLab-600 text-emeraldLab-900"

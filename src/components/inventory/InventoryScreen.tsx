@@ -247,7 +247,7 @@ export const InventoryScreen: React.FC = () => {
                       <input
                         type="number"
                         min="0"
-                        step="50"
+                        step="any"
                         value={stock}
                         onChange={e => updateRawMaterialField(mat.id, 'stockQty', e.target.value)}
                         className="input-excel w-20 px-1.5 py-0.5 rounded-lg text-center font-extrabold text-xs text-emeraldLab-900"
@@ -327,7 +327,7 @@ export const InventoryScreen: React.FC = () => {
                           <input
                             type="number"
                             min="0"
-                            step="50"
+                            step="any"
                             value={stock}
                             onChange={e => updateRawMaterialField(mat.id, 'stockQty', e.target.value)}
                             className="input-excel w-28 px-2 py-1 rounded-lg text-center font-extrabold text-xs sm:text-sm text-emeraldLab-900"
@@ -338,8 +338,8 @@ export const InventoryScreen: React.FC = () => {
                       <td className="py-3 px-3 text-center">
                         <input
                           type="number"
-                          min="10"
-                          step="50"
+                          min="0"
+                          step="any"
                           value={alertThresh}
                           onChange={e => updateRawMaterialField(mat.id, 'minStockAlert', e.target.value)}
                           className="w-20 px-2 py-1 rounded-lg text-center text-xs border border-slate-300"
@@ -434,7 +434,7 @@ export const InventoryScreen: React.FC = () => {
                       <input
                         type="number"
                         min="0"
-                        step="5"
+                        step="any"
                         value={stock}
                         onChange={e => updateProductStockField(prod.id, 'stockQty', parseFloat(e.target.value) || 0)}
                         className="input-excel w-16 px-1.5 py-0.5 rounded-lg text-center font-extrabold text-xs text-emeraldLab-900"
@@ -521,7 +521,7 @@ export const InventoryScreen: React.FC = () => {
                           <input
                             type="number"
                             min="0"
-                            step="5"
+                            step="any"
                             value={stock}
                             onChange={e => updateProductStockField(prod.id, 'stockQty', parseFloat(e.target.value) || 0)}
                             className="input-excel w-24 px-2 py-1 rounded-lg text-center font-extrabold text-xs sm:text-sm text-emeraldLab-900"
@@ -588,7 +588,7 @@ export const InventoryScreen: React.FC = () => {
                 <input
                   type="number"
                   min="1"
-                  step="10"
+                  step="any"
                   value={checkerBatchUnits}
                   onChange={e => setCheckerBatchUnits(Math.max(1, parseInt(e.target.value) || 100))}
                   className="w-14 px-1 py-1 text-center font-extrabold text-xs bg-white rounded-lg border border-slate-200"

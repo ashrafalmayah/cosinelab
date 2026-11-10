@@ -357,7 +357,7 @@ export const CalculatorScreen: React.FC = () => {
                 <input
                   type="number"
                   min="0"
-                  step={currency === 'YER' ? '5' : '0.1'}
+                  step="any"
                   value={toDisplayPrice(currentCalcProduct.containerCost)}
                   onChange={e => updateCalcField('containerCost', Math.max(0, fromDisplayPrice(e.target.value)))}
                   className="w-full px-2 py-2 rounded-xl border border-slate-200 font-bold text-xs text-center bg-slate-50"
@@ -370,7 +370,7 @@ export const CalculatorScreen: React.FC = () => {
                 <input
                   type="number"
                   min="0"
-                  step={currency === 'YER' ? '5' : '0.05'}
+                  step="any"
                   value={toDisplayPrice(currentCalcProduct.labelCost)}
                   onChange={e => updateCalcField('labelCost', Math.max(0, fromDisplayPrice(e.target.value)))}
                   className="w-full px-2 py-2 rounded-xl border border-slate-200 font-bold text-xs text-center bg-slate-50"
@@ -383,7 +383,7 @@ export const CalculatorScreen: React.FC = () => {
                 <input
                   type="number"
                   min="0"
-                  step={currency === 'YER' ? '5' : '0.05'}
+                  step="any"
                   value={toDisplayPrice(computed.overheadCost)}
                   onChange={e => updateCalcField('overheadCost', Math.max(0, fromDisplayPrice(e.target.value)))}
                   className="w-full px-2 py-2 rounded-xl border border-slate-200 font-bold text-xs text-center bg-slate-50"
@@ -397,7 +397,7 @@ export const CalculatorScreen: React.FC = () => {
                   <input
                     type="number"
                     min="0.5"
-                    step="0.1"
+                    step="any"
                     value={currentCalcProduct.multiplier}
                     onChange={e => updateCalcField('multiplier', Math.max(0.5, parseFloat(e.target.value) || 2.5))}
                     className="w-full px-1.5 py-2 rounded-xl border border-slate-200 font-extrabold text-xs text-center bg-slate-50 text-goldLab-900"
@@ -619,7 +619,7 @@ export const CalculatorScreen: React.FC = () => {
                             type="number"
                             min="0"
                             max="100"
-                            step="0.1"
+                            step="any"
                             value={ing.pct}
                             onChange={e => updateIngredientPct(idx, Math.max(0, parseFloat(e.target.value) || 0))}
                             className="input-excel w-14 px-1 py-0.5 rounded-lg text-center font-extrabold text-xs text-emeraldLab-900"
@@ -747,7 +747,7 @@ export const CalculatorScreen: React.FC = () => {
                               type="number"
                               min="0"
                               max="100"
-                              step="0.1"
+                              step="any"
                               value={ing.pct}
                               onChange={e => updateIngredientPct(idx, Math.max(0, parseFloat(e.target.value) || 0))}
                               className="input-excel w-20 px-2 py-1.5 rounded-xl text-center font-extrabold text-sm text-emeraldLab-900"

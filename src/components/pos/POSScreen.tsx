@@ -251,7 +251,8 @@ export const POSScreen: React.FC = () => {
                   <span className="text-slate-500">السعر ({currencySymbol}):</span>
                   <input
                     type="number"
-                    step={currency === 'YER' ? '5' : '0.25'}
+                    min="0"
+                    step="any"
                     value={toDisplayPrice(item.unitPrice)}
                     onChange={e => updateCartCustomPrice(item.prodId, fromDisplayPrice(e.target.value))}
                     className="w-20 px-1.5 py-1 rounded-lg border border-slate-300 text-center font-bold text-xs bg-white"
@@ -276,7 +277,7 @@ export const POSScreen: React.FC = () => {
             <input
               type="number"
               min="0"
-              step={currency === 'YER' ? '5' : '0.5'}
+              step="any"
               value={discount}
               onChange={e => setDiscount(Math.max(0, parseFloat(e.target.value) || 0))}
               className="w-20 px-2 py-1 rounded-lg border border-slate-300 text-left font-bold text-xs bg-white text-rose-600"
