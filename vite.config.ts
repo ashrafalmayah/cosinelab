@@ -8,7 +8,7 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       injectRegister: null,
-      includeAssets: ['icon.svg', 'manifest.json'],
+      includeAssets: ['icon.svg', 'icon-192.png', 'icon-512.png'],
       manifest: {
         name: 'معمل ومبيعات التجميل - CosineLab PWA',
         short_name: 'CosineLab',
@@ -16,64 +16,39 @@ export default defineConfig({
         lang: 'ar',
         dir: 'rtl',
         start_url: '/',
+        scope: '/',
         display: 'standalone',
         background_color: '#1E3A3A',
         theme_color: '#1E3A3A',
         icons: [
           {
+            src: '/icon-192.png',
+            sizes: '192x192',
+            type: 'image/png',
+            purpose: 'any maskable'
+          },
+          {
+            src: '/icon-512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'any maskable'
+          },
+          {
             src: '/icon.svg',
             sizes: '192x192 512x512',
             type: 'image/svg+xml',
-            purpose: 'any maskable'
+            purpose: 'any'
           }
         ]
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,json}'],
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        globIgnores: ['**/Phosphor-*.{svg,ttf,woff}'],
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         skipWaiting: true,
         navigateFallback: '/index.html',
-        runtimeCaching: [
-          {
-            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
-            handler: 'StaleWhileRevalidate',
-            options: {
-              cacheName: 'google-fonts-stylesheets',
-              cacheableResponse: {
-                statuses: [0, 200]
-              }
-            }
-          },
-          {
-            urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'google-fonts-webfonts',
-              cacheableResponse: {
-                statuses: [0, 200]
-              },
-              expiration: {
-                maxEntries: 30,
-                maxAgeSeconds: 60 * 60 * 24 * 365
-              }
-            }
-          },
-          {
-            urlPattern: /^https:\/\/unpkg\.com\/@phosphor-icons\/.*/i,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'phosphor-icons-web',
-              cacheableResponse: {
-                statuses: [0, 200]
-              },
-              expiration: {
-                maxEntries: 30,
-                maxAgeSeconds: 60 * 60 * 24 * 365
-              }
-            }
-          }
-        ]
+        navigateFallbackDenylist: [/^\/api/]
       }
     })
   ]
