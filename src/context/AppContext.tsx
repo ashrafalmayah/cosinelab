@@ -6,6 +6,7 @@ import {
   CartItem,
   EnrichedCartItem,
   Invoice,
+  Expense,
   BatchFeasibility,
   BatchStockItem,
   TabType,
@@ -19,6 +20,7 @@ import {
 import { DEFAULT_RAW_MATERIALS } from '../data/defaultRawMaterials';
 import { DEFAULT_PRODUCTS_SPECS } from '../data/defaultProducts';
 import { SAMPLE_INVOICES } from '../data/sampleInvoices';
+import { SAMPLE_EXPENSES } from '../data/sampleExpenses';
 
 const STORAGE_KEY = "COSINELAB_PWA_STATE_V1";
 
@@ -169,6 +171,9 @@ interface AppContextType {
   products: ComputedProduct[];
   cart: CartItem[];
   invoices: Invoice[];
+  expenses: Expense[];
+  addExpense: (title: string, amount: number) => void;
+  deleteExpense: (id: string) => void;
   currentCalcProduct: ProductSpec;
   setCurrentCalcProduct: React.Dispatch<React.SetStateAction<ProductSpec>>;
   toasts: ToastMessage[];
@@ -230,6 +235,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     { prodId: "prod-2", qty: 1, customPrice: null }
   ]);
   const [invoices, setInvoices] = useState<Invoice[]>(SAMPLE_INVOICES);
+  const [expenses, setExpenses] = useState<Expense[]>(SAMPLE_EXPENSES);
   const [currentCalcProduct, setCurrentCalcProduct] = useState<ProductSpec>(DEFAULT_PRODUCTS_SPECS[0]);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
@@ -266,6 +272,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         if (parsed.rawMaterials && parsed.rawMaterials.length) setRawMaterials(parsed.rawMaterials);
         if (parsed.products && parsed.products.length) setRawProducts(parsed.products);
         if (parsed.invoices) setInvoices(parsed.invoices);
+        if (parsed.expenses && Array.isArray(parsed.expenses)) setExpenses(parsed.expenses);
         if (parsed.cart) setCart(parsed.cart);
         if (parsed.products && parsed.products[0]) setCurrentCalcProduct(parsed.products[0]);
       }
@@ -275,14 +282,22 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   }, []);
 
   // Save to LocalStorage
-  const saveToStorage = (curr: CurrencyCode, mats: RawMaterial[], prods: ProductSpec[], invs: Invoice[], crt: CartItem[]) => {
+  const saveToStorage = (
+    curr: CurrencyCode,
+    mats: RawMaterial[],
+    prods: ProductSpec[],
+    invs: Invoice[],
+    crt: CartItem[],
+    exps: Expense[] = expenses
+  ) => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify({
         currency: curr,
         rawMaterials: mats,
         products: prods,
         invoices: invs,
-        cart: crt
+        cart: crt,
+        expenses: exps
       }));
     } catch (e) {
       console.error("Storage save error:", e);
@@ -456,6 +471,38 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     setInvoices(updated);
     saveToStorage(currency, rawMaterials, rawProducts, updated, cart);
     showToast("تم حذف الفاتورة من السجل", "info");
+  };
+
+  // Expenses operations
+  const addExpense = (title: string, amount: number) => {
+    const cleanTitle = title.trim();
+    const cleanAmount = Math.max(0, Number(amount) || 0);
+    if (!cleanTitle) {
+      showToast("يرجى إدخال بيان أو اسم المصروف", "error");
+      return;
+    }
+    if (cleanAmount <= 0) {
+      showToast("يرجى إدخال مبلغ صحيح للمصروف", "error");
+      return;
+    }
+    const now = new Date();
+    const newExp: Expense = {
+      id: "EXP-" + Date.now().toString().slice(-6),
+      title: cleanTitle,
+      amount: cleanAmount,
+      date: now.toLocaleDateString("ar-EG") + " " + now.toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" })
+    };
+    const updated = [newExp, ...expenses];
+    setExpenses(updated);
+    saveToStorage(currency, rawMaterials, rawProducts, invoices, cart, updated);
+    showToast(`تم تسجيل المصروف "${cleanTitle}" بنجاح!`, "success");
+  };
+
+  const deleteExpense = (id: string) => {
+    const updated = expenses.filter(e => e.id !== id);
+    setExpenses(updated);
+    saveToStorage(currency, rawMaterials, rawProducts, invoices, cart, updated);
+    showToast("تم حذف المصروف من السجل بنجاح", "info");
   };
 
   // Calculator operations
@@ -690,6 +737,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       rawMaterials,
       products: rawProducts,
       invoices,
+      expenses,
       cart
     }, null, 2);
     const blob = new Blob([dataStr], { type: "application/json" });
@@ -711,6 +759,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         setRawMaterials(imported.rawMaterials);
         setRawProducts(imported.products);
         if (imported.invoices) setInvoices(imported.invoices);
+        if (imported.expenses && Array.isArray(imported.expenses)) setExpenses(imported.expenses);
         if (imported.cart) setCart(imported.cart);
         if (imported.currency) {
           if (imported.currency === "SAR" || imported.currency === "ر.س") {
@@ -722,7 +771,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           }
         }
         if (imported.products[0]) setCurrentCalcProduct(imported.products[0]);
-        saveToStorage(imported.currency || "YER", imported.rawMaterials, imported.products, imported.invoices || [], imported.cart || []);
+        saveToStorage(
+          imported.currency || "YER",
+          imported.rawMaterials,
+          imported.products,
+          imported.invoices || [],
+          imported.cart || [],
+          imported.expenses || []
+        );
         showToast("تمت استعادة كافة البيانات والتركيبات بنجاح!", "success");
         return true;
       }
@@ -738,15 +794,23 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     setRawMaterials(DEFAULT_RAW_MATERIALS);
     setRawProducts(DEFAULT_PRODUCTS_SPECS);
     setInvoices(SAMPLE_INVOICES);
+    setExpenses(SAMPLE_EXPENSES);
     setCart([
       { prodId: "prod-1", qty: 2, customPrice: null },
       { prodId: "prod-2", qty: 1, customPrice: null }
     ]);
     setCurrentCalcProduct(DEFAULT_PRODUCTS_SPECS[0]);
-    saveToStorage("YER", DEFAULT_RAW_MATERIALS, DEFAULT_PRODUCTS_SPECS, SAMPLE_INVOICES, [
-      { prodId: "prod-1", qty: 2, customPrice: null },
-      { prodId: "prod-2", qty: 1, customPrice: null }
-    ]);
+    saveToStorage(
+      "YER",
+      DEFAULT_RAW_MATERIALS,
+      DEFAULT_PRODUCTS_SPECS,
+      SAMPLE_INVOICES,
+      [
+        { prodId: "prod-1", qty: 2, customPrice: null },
+        { prodId: "prod-2", qty: 1, customPrice: null }
+      ],
+      SAMPLE_EXPENSES
+    );
     showToast("تمت استعادة بيانات المصنع الافتراضية (12 منتج و 50 مادة خام)", "success");
   };
 
@@ -785,6 +849,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         products,
         cart,
         invoices,
+        expenses,
+        addExpense,
+        deleteExpense,
         currentCalcProduct,
         setCurrentCalcProduct,
         toasts,

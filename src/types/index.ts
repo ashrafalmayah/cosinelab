@@ -87,6 +87,13 @@ export interface Invoice {
   items: InvoiceItem[];
 }
 
+export interface Expense {
+  id: string;
+  title: string;
+  amount: number;
+  date: string;
+}
+
 export interface BatchStockItem {
   matId: number;
   name: string;

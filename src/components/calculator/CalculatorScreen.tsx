@@ -920,6 +920,9 @@ export const CalculatorScreen: React.FC = () => {
         </div>
       </div>
 
+      {/* Mobile Bottom Clearance for Sticky Actions Bar and BottomNav */}
+      <div className="h-28 lg:hidden shrink-0" aria-hidden="true" />
+
       {/* Floating Bottom Metrics & Action Bar for Mobile (< lg) */}
       <div className="lg:hidden fixed bottom-16 inset-x-3 z-30 no-print animate-fade-in">
         <button
