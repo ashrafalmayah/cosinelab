@@ -89,15 +89,27 @@ export const CatalogScreen: React.FC = () => {
                 <h3 className="font-extrabold text-base text-slate-800">{idx + 1}. {prod.name}</h3>
 
                 {/* Water vs Active Breakdown Pill */}
-                <div className="p-3 rounded-2xl bg-sky-50/80 border border-sky-200/80 space-y-1.5">
-                  <div className="flex justify-between text-xs font-bold text-sky-900">
-                    <span><i className="ph-fill ph-drop text-sky-600 ml-1"></i>الماء المقطر: {prod.waterPct}%</span>
-                    <span>{prod.waterWeight.toFixed(2)} {prod.unit}</span>
+                {prod.hasWater !== false ? (
+                  <div className="p-3 rounded-2xl bg-sky-50/80 border border-sky-200/80 space-y-1.5">
+                    <div className="flex justify-between text-xs font-bold text-sky-900">
+                      <span><i className="ph-fill ph-drop text-sky-600 ml-1"></i>الماء المقطر: {prod.waterPct}%</span>
+                      <span>{prod.waterWeight.toFixed(2)} {prod.unit}</span>
+                    </div>
+                    <div className="text-[11px] text-slate-600 leading-relaxed">
+                      <strong>أبرز المكونات ({prod.activePctSum}%):</strong> {topIngs}...
+                    </div>
                   </div>
-                  <div className="text-[11px] text-slate-600 leading-relaxed">
-                    <strong>أبرز المكونات ({prod.activePctSum}%):</strong> {topIngs}...
+                ) : (
+                  <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 space-y-1.5">
+                    <div className="flex justify-between text-xs font-bold text-slate-700">
+                      <span><i className="ph-bold ph-drop-slash text-slate-400 ml-1"></i>خالٍ من الماء (بدون ماء)</span>
+                      <span>100% خامات</span>
+                    </div>
+                    <div className="text-[11px] text-slate-600 leading-relaxed">
+                      <strong>المكونات ({prod.activePctSum}%):</strong> {topIngs}...
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
 
               <div className="space-y-3 pt-2 border-t border-slate-100">
@@ -204,7 +216,7 @@ export const CatalogScreen: React.FC = () => {
                     </td>
                     <td className="py-3 px-3 text-center font-bold">{prod.packSize} {prod.unit}</td>
                     <td className="py-3 px-3 text-center text-sky-800 font-bold">
-                      {prod.waterPct}% ({prod.waterWeight.toFixed(2)} {prod.unit})
+                      {prod.hasWater !== false ? `${prod.waterPct}% (${prod.waterWeight.toFixed(2)} ${prod.unit})` : <span className="text-slate-400 font-medium">بدون ماء</span>}
                     </td>
                     <td className="py-3 px-3 text-center font-semibold">{prod.rawMaterialsCost.toFixed(2)}</td>
                     <td className="py-3 px-3 text-center text-slate-600">{packAndOh.toFixed(2)}</td>

@@ -27,6 +27,7 @@ export function computeProductMetrics(prodSpec: ProductSpec, rawMaterials: RawMa
   const containerCost = Number(prodSpec.containerCost) || 0;
   const labelCost = Number(prodSpec.labelCost) || 0;
   const multiplier = Number(prodSpec.multiplier) || 2.5;
+  const hasWater = prodSpec.hasWater !== false;
 
   let activePctSum = 0;
   let activeCostSum = 0;
@@ -40,11 +41,11 @@ export function computeProductMetrics(prodSpec: ProductSpec, rawMaterials: RawMa
     activeCostSum += weightInUnit * pricePerGram;
   });
 
-  const waterPct = Math.max(0, +(100 - activePctSum).toFixed(2));
-  const waterWeight = +((waterPct / 100) * packSize).toFixed(2);
+  const waterPct = hasWater ? Math.max(0, +(100 - activePctSum).toFixed(2)) : 0;
+  const waterWeight = hasWater ? +((waterPct / 100) * packSize).toFixed(2) : 0;
   const waterMat = rawMaterials.find(m => Number(m.id) === 1);
   const waterPricePerGram = waterMat ? (Number(waterMat.packPrice) / Number(waterMat.packSize)) : 0.0015;
-  const waterCost = waterWeight * waterPricePerGram;
+  const waterCost = hasWater ? +(waterWeight * waterPricePerGram).toFixed(2) : 0;
 
   const rawMaterialsCost = +(waterCost + activeCostSum).toFixed(2);
 
@@ -60,6 +61,7 @@ export function computeProductMetrics(prodSpec: ProductSpec, rawMaterials: RawMa
 
   return {
     ...prodSpec,
+    hasWater,
     overheadCost,
     activePctSum: +activePctSum.toFixed(2),
     waterPct,
@@ -87,28 +89,32 @@ export function checkBatchStockFeasibility(
   const items: BatchStockItem[] = [];
   const shortages: BatchStockItem[] = [];
 
-  // Distilled water (id: 1)
-  const waterPct = prod.waterPct !== undefined ? Number(prod.waterPct) : 70;
-  const waterUnitWeight = (waterPct / 100) * packSize;
-  const waterRequired = +(waterUnitWeight * bUnits).toFixed(2);
-  const waterMat = rawMaterials.find(m => Number(m.id) === 1);
-  const waterStock = Number(waterMat?.stockQty || 0);
-  const waterShortage = Math.max(0, +(waterRequired - waterStock).toFixed(2));
-  const waterMax = waterUnitWeight > 0 ? Math.floor(waterStock / waterUnitWeight) : 999999;
-  if (waterMax < maxPossibleUnits) maxPossibleUnits = waterMax;
+  const hasWater = prod.hasWater !== false;
 
-  const waterItem: BatchStockItem = {
-    matId: 1,
-    name: waterMat?.name || "ماء مقطر (Distilled Water)",
-    isWater: true,
-    unitWeight: waterUnitWeight,
-    required: waterRequired,
-    available: waterStock,
-    shortage: waterShortage,
-    maxUnits: waterMax
-  };
-  items.push(waterItem);
-  if (waterShortage > 0) shortages.push(waterItem);
+  // Distilled water (id: 1) - only included if product has water
+  if (hasWater) {
+    const waterPct = prod.waterPct !== undefined ? Number(prod.waterPct) : 70;
+    const waterUnitWeight = (waterPct / 100) * packSize;
+    const waterRequired = +(waterUnitWeight * bUnits).toFixed(2);
+    const waterMat = rawMaterials.find(m => Number(m.id) === 1);
+    const waterStock = Number(waterMat?.stockQty || 0);
+    const waterShortage = Math.max(0, +(waterRequired - waterStock).toFixed(2));
+    const waterMax = waterUnitWeight > 0 ? Math.floor(waterStock / waterUnitWeight) : 999999;
+    if (waterMax < maxPossibleUnits) maxPossibleUnits = waterMax;
+
+    const waterItem: BatchStockItem = {
+      matId: 1,
+      name: waterMat?.name || "ماء مقطر (Distilled Water)",
+      isWater: true,
+      unitWeight: waterUnitWeight,
+      required: waterRequired,
+      available: waterStock,
+      shortage: waterShortage,
+      maxUnits: waterMax
+    };
+    items.push(waterItem);
+    if (waterShortage > 0) shortages.push(waterItem);
+  }
 
   // Active ingredients
   (prod.ingredients || []).forEach(ing => {
@@ -478,6 +484,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       labelCost: 1.00,
       overheadCost: 0.35,
       multiplier: 2.5,
+      hasWater: true,
       ingredients: [
         { matId: 2, pct: 4.0 },
         { matId: 9, pct: 5.0 },
@@ -558,10 +565,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       if (!proceed) return;
     }
 
-    // Deduct Distilled Water & active ingredients
-    const waterWeight = +(computed.waterWeight * batchUnits).toFixed(2);
+    // Deduct Distilled Water (if product has water) & active ingredients
+    const hasWater = computed.hasWater !== false;
+    const waterWeight = hasWater ? +(computed.waterWeight * batchUnits).toFixed(2) : 0;
     const updatedMaterials = rawMaterials.map(m => {
       if (Number(m.id) === 1) {
+        if (!hasWater || waterWeight <= 0) return m;
         return { ...m, stockQty: Math.max(0, +(Number(m.stockQty || 0) - waterWeight).toFixed(2)) };
       }
       const ing = computed.ingredients.find(i => Number(i.matId) === Number(m.id));

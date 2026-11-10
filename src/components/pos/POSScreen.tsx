@@ -549,10 +549,17 @@ export const POSScreen: React.FC = () => {
 
                       <h4 className="font-extrabold text-xs sm:text-sm text-slate-800 leading-snug">{prod.name}</h4>
 
-                      <div className="mt-2 flex items-center gap-1.5 text-[10px] sm:text-[11px] text-sky-800 bg-sky-50 px-2 py-1 rounded-lg border border-sky-100">
-                        <i className="ph-fill ph-drop text-sky-500"></i>
-                        <span>ماء مقطر: <strong>{prod.waterPct}%</strong> ({prod.waterWeight} {prod.unit})</span>
-                      </div>
+                      {prod.hasWater !== false ? (
+                        <div className="mt-2 flex items-center gap-1.5 text-[10px] sm:text-[11px] text-sky-800 bg-sky-50 px-2 py-1 rounded-lg border border-sky-100">
+                          <i className="ph-fill ph-drop text-sky-500"></i>
+                          <span>ماء مقطر: <strong>{prod.waterPct}%</strong> ({prod.waterWeight} {prod.unit})</span>
+                        </div>
+                      ) : (
+                        <div className="mt-2 flex items-center gap-1.5 text-[10px] sm:text-[11px] text-slate-600 bg-slate-100 px-2 py-1 rounded-lg border border-slate-200">
+                          <i className="ph-bold ph-drop-slash text-slate-400"></i>
+                          <span>خالٍ من الماء <strong>(100% خامات)</strong></span>
+                        </div>
+                      )}
                     </div>
 
                     <div className="space-y-2.5 pt-2 border-t border-slate-100">

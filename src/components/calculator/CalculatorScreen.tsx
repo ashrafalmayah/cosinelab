@@ -42,26 +42,31 @@ export const CalculatorScreen: React.FC = () => {
   const selectableMaterials = rawMaterials.filter(m => Number(m.id) !== 1);
   const waterMat = rawMaterials.find(m => Number(m.id) === 1);
   const waterPricePerGram = waterMat ? (Number(waterMat.packPrice) / Number(waterMat.packSize)) : 0.0015;
-  const waterBatchWeight = +(computed.waterWeight * batchUnits).toFixed(2);
+  const waterBatchWeight = computed.hasWater ? +(computed.waterWeight * batchUnits).toFixed(2) : 0;
   const waterItem = feasibility.items.find(i => i.isWater);
 
   const totalBatchWeightKg = ((packSize * batchUnits) / 1000).toFixed(2);
   const marginPct = computed.sellingPrice > 0 ? Math.round((computed.unitProfit / computed.sellingPrice) * 100) : 0;
 
   const handlePrintBatchSheet = () => {
-    let rowsHtml = `
-      <tr class="bg-sky-50 font-bold border-b border-slate-300">
-        <td class="py-2 px-3">1</td>
-        <td class="py-2 px-3">${waterMat?.name || 'ماء مقطر'}</td>
-        <td class="py-2 px-3">${waterMat?.phase || 'الطور المائي'}</td>
-        <td class="py-2 px-3 text-center">${computed.waterPct.toFixed(2)}%</td>
-        <td class="py-2 px-3 text-center">${computed.waterWeight.toFixed(2)} ${unit}</td>
-        <td class="py-2 px-3 text-center font-extrabold">${(computed.waterWeight * batchUnits).toFixed(1)} ${unit}</td>
-        <td class="py-2 px-3 text-center">${computed.waterCost.toFixed(2)}</td>
-      </tr>
-    `;
+    let rowsHtml = '';
+    let rowIdx = 1;
 
-    computed.ingredients.forEach((ing, i) => {
+    if (computed.hasWater) {
+      rowsHtml += `
+        <tr class="bg-sky-50 font-bold border-b border-slate-300">
+          <td class="py-2 px-3">${rowIdx++}</td>
+          <td class="py-2 px-3">${waterMat?.name || 'ماء مقطر'}</td>
+          <td class="py-2 px-3">${waterMat?.phase || 'الطور المائي'}</td>
+          <td class="py-2 px-3 text-center">${computed.waterPct.toFixed(2)}%</td>
+          <td class="py-2 px-3 text-center">${computed.waterWeight.toFixed(2)} ${unit}</td>
+          <td class="py-2 px-3 text-center font-extrabold">${(computed.waterWeight * batchUnits).toFixed(1)} ${unit}</td>
+          <td class="py-2 px-3 text-center">${computed.waterCost.toFixed(2)}</td>
+        </tr>
+      `;
+    }
+
+    computed.ingredients.forEach((ing) => {
       const mat = rawMaterials.find(m => Number(m.id) === Number(ing.matId));
       if (!mat) return;
       const ppg = Number(mat.packPrice) / Number(mat.packSize);
@@ -71,7 +76,7 @@ export const CalculatorScreen: React.FC = () => {
 
       rowsHtml += `
         <tr class="border-b border-slate-200">
-          <td class="py-2 px-3">${i + 2}</td>
+          <td class="py-2 px-3">${rowIdx++}</td>
           <td class="py-2 px-3 font-bold">${mat.name}</td>
           <td class="py-2 px-3 text-[11px]">${mat.phase}</td>
           <td class="py-2 px-3 text-center font-bold">${Number(ing.pct).toFixed(2)}%</td>
@@ -135,10 +140,17 @@ export const CalculatorScreen: React.FC = () => {
     <div className="space-y-4">
       {/* Cost Breakdown */}
       <div className="space-y-2 text-xs text-slate-600">
-        <div className="flex justify-between">
-          <span>تكلفة الماء المقطر للعبوة:</span>
-          <span className="font-bold text-slate-800">{formatMoney(computed.waterCost)}</span>
-        </div>
+        {computed.hasWater ? (
+          <div className="flex justify-between">
+            <span>تكلفة الماء المقطر للعبوة:</span>
+            <span className="font-bold text-slate-800">{formatMoney(computed.waterCost)}</span>
+          </div>
+        ) : (
+          <div className="flex justify-between text-slate-500">
+            <span>الطور المائي:</span>
+            <span className="font-bold text-slate-600">بدون ماء (خالٍ من الماء)</span>
+          </div>
+        )}
         <div className="flex justify-between">
           <span>تكلفة المواد الفعالة والمستحلبات:</span>
           <span className="font-bold text-slate-800">{formatMoney(computed.activeCostSum)}</span>
@@ -317,6 +329,48 @@ export const CalculatorScreen: React.FC = () => {
                 </select>
               </div>
 
+              {/* Water Content Toggle */}
+              <div className="col-span-2 sm:col-span-3">
+                <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-200/80">
+                  <div className="flex items-center gap-2.5">
+                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-lg shrink-0 transition-colors ${
+                      computed.hasWater ? 'bg-sky-100 text-sky-700' : 'bg-slate-200 text-slate-500'
+                    }`}>
+                      <i className={computed.hasWater ? "ph-fill ph-drop" : "ph-bold ph-drop-slash"}></i>
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-extrabold text-xs text-slate-800">محتوى الماء المقطر (Aqua):</span>
+                        <span className={`px-2 py-0.5 rounded-lg text-[10px] font-bold ${
+                          computed.hasWater
+                            ? 'bg-sky-100 text-sky-800 border border-sky-200'
+                            : 'bg-amber-100 text-amber-800 border border-amber-200'
+                        }`}>
+                          {computed.hasWater ? 'يحتوي على ماء' : 'خالٍ من الماء (لامائي)'}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-500 mt-0.5">
+                        {computed.hasWater
+                          ? 'يحتوي المنتج على ماء مقطر يتم حسابه تلقائياً لإكمال 100%'
+                          : 'تركيبة بدون ماء (زيوت، زبدة، بلسم، أو سيروم زيتي)'}
+                      </p>
+                    </div>
+                  </div>
+
+                  <label className="flex items-center gap-2.5 cursor-pointer select-none bg-white px-3 py-1.5 rounded-xl border border-slate-200 hover:border-slate-300 shadow-sm transition">
+                    <input
+                      type="checkbox"
+                      checked={computed.hasWater}
+                      onChange={e => updateCalcField('hasWater', e.target.checked)}
+                      className="w-4 h-4 text-sky-600 rounded border-slate-300 focus:ring-sky-500 cursor-pointer"
+                    />
+                    <span className="font-bold text-xs text-slate-700">
+                      {computed.hasWater ? 'يحتوي على ماء' : 'بدون ماء'}
+                    </span>
+                  </label>
+                </div>
+              </div>
+
               {/* Pack Size & Unit */}
               <div>
                 <label className="block font-bold text-slate-600 mb-1">حجم العبوة:</label>
@@ -426,10 +480,17 @@ export const CalculatorScreen: React.FC = () => {
           {/* Visual Progress Bar (Water vs Active Balance) */}
           <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-sm border border-slate-200/90 space-y-2.5">
             <div className="flex items-center justify-between text-xs font-extrabold">
-              <span className="text-sky-800 flex items-center gap-1">
-                <i className="ph-fill ph-drop text-sky-500"></i>
-                <span>ماء مقطر: {computed.waterPct.toFixed(2)}%</span>
-              </span>
+              {computed.hasWater ? (
+                <span className="text-sky-800 flex items-center gap-1">
+                  <i className="ph-fill ph-drop text-sky-500"></i>
+                  <span>ماء مقطر: {computed.waterPct.toFixed(2)}%</span>
+                </span>
+              ) : (
+                <span className="text-slate-500 flex items-center gap-1">
+                  <i className="ph-bold ph-drop-slash text-slate-400"></i>
+                  <span>خالٍ من الماء (بدون ماء)</span>
+                </span>
+              )}
               <span className="text-emeraldLab-800 flex items-center gap-1">
                 <i className="ph-fill ph-flask text-emeraldLab-600"></i>
                 <span>المواد الفعالة: {computed.activePctSum.toFixed(2)}%</span>
@@ -437,12 +498,14 @@ export const CalculatorScreen: React.FC = () => {
             </div>
 
             <div className="w-full h-5 sm:h-6 rounded-xl bg-slate-100 p-0.5 sm:p-1 flex overflow-hidden border border-slate-200">
-              <div
-                style={{ width: `${Math.min(100, Math.max(0, computed.waterPct))}%` }}
-                className="h-full bg-gradient-to-r from-sky-400 to-sky-500 rounded-lg text-white text-[10px] font-bold flex items-center justify-center transition-all duration-300"
-              >
-                {computed.waterPct > 12 ? `${computed.waterPct.toFixed(1)}% ماء` : ''}
-              </div>
+              {computed.hasWater && (
+                <div
+                  style={{ width: `${Math.min(100, Math.max(0, computed.waterPct))}%` }}
+                  className="h-full bg-gradient-to-r from-sky-400 to-sky-500 rounded-lg text-white text-[10px] font-bold flex items-center justify-center transition-all duration-300"
+                >
+                  {computed.waterPct > 12 ? `${computed.waterPct.toFixed(1)}% ماء` : ''}
+                </div>
+              )}
               <div
                 style={{ width: `${Math.min(100, Math.max(0, computed.activePctSum))}%` }}
                 className="h-full bg-gradient-to-r from-emeraldLab-600 to-emeraldLab-700 rounded-lg text-white text-[10px] font-bold flex items-center justify-center transition-all duration-300"
@@ -454,7 +517,13 @@ export const CalculatorScreen: React.FC = () => {
             {computed.activePctSum > 100.001 && (
               <div className="p-2.5 rounded-xl bg-rose-50 border border-rose-300 text-rose-800 font-extrabold text-xs flex items-center gap-2">
                 <i className="ph-fill ph-warning text-lg text-rose-600 shrink-0"></i>
-                <span>تحذير: مجموع نسب المواد الفعالة تجاوز 100%!</span>
+                <span>تحذير: مجموع نسب المواد تجاوز 100%!</span>
+              </div>
+            )}
+            {!computed.hasWater && computed.activePctSum < 99.99 && (
+              <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-300 text-amber-800 font-extrabold text-xs flex items-center gap-2">
+                <i className="ph-fill ph-info text-lg text-amber-600 shrink-0"></i>
+                <span>ملاحظة: مجموع نسب الخامات في التركيبة الخالية من الماء هو {computed.activePctSum.toFixed(2)}% (المتبقي للوصول إلى 100%: {(100 - computed.activePctSum).toFixed(2)}%)</span>
               </div>
             )}
           </div>
@@ -531,45 +600,70 @@ export const CalculatorScreen: React.FC = () => {
                 </div>
                 <h3 className="font-extrabold text-sm sm:text-base text-slate-800">مكونات وخامات التركيبة</h3>
               </div>
-              <button
-                onClick={addIngredientRow}
-                className="px-3 py-1.5 rounded-xl bg-emeraldLab-800 hover:bg-emeraldLab-700 text-white text-xs font-extrabold flex items-center gap-1.5 shadow-sm transition active:scale-95"
-              >
-                <i className="ph-bold ph-plus-circle"></i>
-                <span>إضافة مادة</span>
-              </button>
+              <div className="flex items-center gap-2">
+                {!computed.hasWater && (
+                  <button
+                    type="button"
+                    onClick={() => updateCalcField('hasWater', true)}
+                    className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-sky-50 hover:bg-sky-100 text-sky-800 border border-sky-300 text-xs font-extrabold flex items-center gap-1.5 shadow-sm transition active:scale-95"
+                    title="إضافة ماء مقطر إلى التركيبة"
+                  >
+                    <i className="ph-bold ph-drop text-sky-600"></i>
+                    <span>إضافة ماء</span>
+                  </button>
+                )}
+                <button
+                  onClick={addIngredientRow}
+                  className="px-3 py-1.5 rounded-xl bg-emeraldLab-800 hover:bg-emeraldLab-700 text-white text-xs font-extrabold flex items-center gap-1.5 shadow-sm transition active:scale-95"
+                >
+                  <i className="ph-bold ph-plus-circle"></i>
+                  <span>إضافة مادة</span>
+                </button>
+              </div>
             </div>
 
             {/* Mobile Cards View (< sm) */}
             <div className="sm:hidden space-y-2.5">
-              {/* Water Card */}
-              <div className="p-3.5 rounded-2xl bg-sky-50/90 border border-sky-200 space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="font-extrabold text-xs text-sky-950 flex items-center gap-1.5">
-                    <i className="ph-fill ph-drop text-sky-600"></i>
-                    <span>ماء مقطر (Distilled Water)</span>
-                  </span>
-                  <span className="text-[11px] font-bold text-sky-800 bg-sky-100 px-2 py-0.5 rounded-lg">الطور المائي</span>
-                </div>
-                <div className="grid grid-cols-3 gap-2 text-center bg-white/80 p-2 rounded-xl text-xs">
-                  <div>
-                    <span className="text-[10px] text-slate-400 block">النسبة</span>
-                    <strong className="text-sky-900 font-extrabold">{computed.waterPct.toFixed(2)}%</strong>
+              {/* Water Card (Only if hasWater is true) */}
+              {computed.hasWater && (
+                <div className="p-3.5 rounded-2xl bg-sky-50/90 border border-sky-200 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-extrabold text-xs text-sky-950 flex items-center gap-1.5">
+                      <i className="ph-fill ph-drop text-sky-600"></i>
+                      <span>ماء مقطر (Distilled Water)</span>
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[11px] font-bold text-sky-800 bg-sky-100 px-2 py-0.5 rounded-lg">الطور المائي</span>
+                      <button
+                        type="button"
+                        onClick={() => updateCalcField('hasWater', false)}
+                        className="p-1 rounded-lg text-rose-500 hover:bg-rose-100 transition"
+                        title="إزالة الماء من التركيبة"
+                      >
+                        <i className="ph-bold ph-trash text-sm"></i>
+                      </button>
+                    </div>
                   </div>
-                  <div>
-                    <span className="text-[10px] text-slate-400 block">وزن العبوة</span>
-                    <strong className="text-slate-800">{computed.waterWeight.toFixed(2)} {unit}</strong>
+                  <div className="grid grid-cols-3 gap-2 text-center bg-white/80 p-2 rounded-xl text-xs">
+                    <div>
+                      <span className="text-[10px] text-slate-400 block">النسبة</span>
+                      <strong className="text-sky-900 font-extrabold">{computed.waterPct.toFixed(2)}%</strong>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-slate-400 block">وزن العبوة</span>
+                      <strong className="text-slate-800">{computed.waterWeight.toFixed(2)} {unit}</strong>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-slate-400 block">التكلفة</span>
+                      <strong className="text-emeraldLab-800">{formatMoney(computed.waterCost)}</strong>
+                    </div>
                   </div>
-                  <div>
-                    <span className="text-[10px] text-slate-400 block">التكلفة</span>
-                    <strong className="text-emeraldLab-800">{formatMoney(computed.waterCost)}</strong>
+                  <div className="flex items-center justify-between text-[11px] pt-1 border-t border-sky-200/60 text-slate-600">
+                    <span>وزن التشغيلة: {waterBatchWeight.toLocaleString("en-US")} {unit}</span>
+                    <span className="text-emerald-700 font-bold">متوفر بالمخزون ✓</span>
                   </div>
                 </div>
-                <div className="flex items-center justify-between text-[11px] pt-1 border-t border-sky-200/60 text-slate-600">
-                  <span>وزن التشغيلة: {waterBatchWeight.toLocaleString("en-US")} {unit}</span>
-                  <span className="text-emerald-700 font-bold">متوفر بالمخزون ✓</span>
-                </div>
-              </div>
+              )}
 
               {/* Active Ingredients Mobile Cards */}
               {computed.ingredients.map((ing, idx) => {
@@ -584,7 +678,7 @@ export const CalculatorScreen: React.FC = () => {
                   <div key={idx} className="p-3 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-2.5">
                     <div className="flex items-center justify-between gap-2 min-w-0 w-full">
                       <span className="w-5 h-5 rounded-full bg-slate-200 text-slate-700 text-[10px] font-bold flex items-center justify-center shrink-0">
-                        {idx + 2}
+                        {computed.hasWater ? idx + 2 : idx + 1}
                       </span>
                       <select
                         value={ing.matId}
@@ -670,47 +764,56 @@ export const CalculatorScreen: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {/* Row 1: Fixed Distilled Water */}
-                  <tr className="water-row font-bold">
-                    <td className="py-2.5 px-3 text-center font-extrabold text-sky-800">1</td>
-                    <td className="py-2.5 px-3">
-                      <div className="font-extrabold text-sky-950 flex items-center gap-1.5">
-                        <i className="ph-fill ph-drop text-sky-600"></i>
-                        <span>{waterMat?.name || 'ماء مقطر (Distilled Water)'}</span>
-                      </div>
-                    </td>
-                    <td className="py-2.5 px-3">
-                      <span className="text-xs text-sky-900">{waterMat?.phase}</span>
-                      <div className="text-[10px] text-sky-600 font-bold">إكمال تلقائي حتى 100%</div>
-                    </td>
-                    <td className="py-2.5 px-3 text-center font-extrabold text-sky-900 text-sm">
-                      {computed.waterPct.toFixed(2)}%
-                    </td>
-                    <td className="py-2.5 px-3 text-center font-extrabold text-sky-900">
-                      {computed.waterWeight.toFixed(2)} {unit}
-                    </td>
-                    <td className="py-2.5 px-3 text-center text-slate-500">{waterPricePerGram.toFixed(4)}</td>
-                    <td className="py-2.5 px-3 text-center font-extrabold text-emeraldLab-800">
-                      {computed.waterCost.toFixed(2)}
-                    </td>
-                    <td className="py-2.5 px-3 text-center font-semibold text-slate-700">
-                      {waterBatchWeight.toLocaleString("en-US", { maximumFractionDigits: 1 })} {unit}
-                    </td>
-                    <td className="py-2.5 px-3 text-center font-bold text-xs">
-                      {waterItem && waterItem.shortage > 0 ? (
-                        <div>
-                          <span className="px-2 py-0.5 rounded-lg bg-rose-100 text-rose-800 text-[11px] font-bold border border-rose-300 block">
-                            عجز: -{waterItem.shortage.toFixed(1)} {unit}
-                          </span>
+                  {/* Row 1: Fixed Distilled Water (if hasWater is true) */}
+                  {computed.hasWater && (
+                    <tr className="water-row font-bold">
+                      <td className="py-2.5 px-3 text-center font-extrabold text-sky-800">1</td>
+                      <td className="py-2.5 px-3">
+                        <div className="font-extrabold text-sky-950 flex items-center gap-1.5">
+                          <i className="ph-fill ph-drop text-sky-600"></i>
+                          <span>{waterMat?.name || 'ماء مقطر (Distilled Water)'}</span>
                         </div>
-                      ) : (
-                        <span className="text-[11px] font-bold text-emerald-700 block">متوفر بالمخزون ✓</span>
-                      )}
-                    </td>
-                    <td className="py-2.5 px-2 text-center text-slate-400">
-                      <i className="ph-fill ph-lock-key text-base"></i>
-                    </td>
-                  </tr>
+                      </td>
+                      <td className="py-2.5 px-3">
+                        <span className="text-xs text-sky-900">{waterMat?.phase}</span>
+                        <div className="text-[10px] text-sky-600 font-bold">إكمال تلقائي حتى 100%</div>
+                      </td>
+                      <td className="py-2.5 px-3 text-center font-extrabold text-sky-900 text-sm">
+                        {computed.waterPct.toFixed(2)}%
+                      </td>
+                      <td className="py-2.5 px-3 text-center font-extrabold text-sky-900">
+                        {computed.waterWeight.toFixed(2)} {unit}
+                      </td>
+                      <td className="py-2.5 px-3 text-center text-slate-500">{waterPricePerGram.toFixed(4)}</td>
+                      <td className="py-2.5 px-3 text-center font-extrabold text-emeraldLab-800">
+                        {computed.waterCost.toFixed(2)}
+                      </td>
+                      <td className="py-2.5 px-3 text-center font-semibold text-slate-700">
+                        {waterBatchWeight.toLocaleString("en-US", { maximumFractionDigits: 1 })} {unit}
+                      </td>
+                      <td className="py-2.5 px-3 text-center font-bold text-xs">
+                        {waterItem && waterItem.shortage > 0 ? (
+                          <div>
+                            <span className="px-2 py-0.5 rounded-lg bg-rose-100 text-rose-800 text-[11px] font-bold border border-rose-300 block">
+                              عجز: -{waterItem.shortage.toFixed(1)} {unit}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-[11px] font-bold text-emerald-700 block">متوفر بالمخزون ✓</span>
+                        )}
+                      </td>
+                      <td className="py-2.5 px-2 text-center">
+                        <button
+                          type="button"
+                          onClick={() => updateCalcField('hasWater', false)}
+                          className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-50 hover:text-rose-700 transition"
+                          title="إزالة الماء من التركيبة"
+                        >
+                          <i className="ph-bold ph-trash text-base"></i>
+                        </button>
+                      </td>
+                    </tr>
+                  )}
 
                   {/* Active Ingredients Rows */}
                   {computed.ingredients.map((ing, idx) => {
@@ -723,7 +826,9 @@ export const CalculatorScreen: React.FC = () => {
 
                     return (
                       <tr key={idx} className="hover:bg-amber-50/40 transition">
-                        <td className="py-2.5 px-3 text-center font-bold text-slate-400">{idx + 2}</td>
+                        <td className="py-2.5 px-3 text-center font-bold text-slate-400">
+                          {computed.hasWater ? idx + 2 : idx + 1}
+                        </td>
                         <td className="py-2.5 px-3">
                           <select
                             value={ing.matId}

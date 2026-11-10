@@ -28,10 +28,12 @@ export interface ProductSpec {
   multiplier: number;
   stockQty?: number;
   minStockAlert?: number;
+  hasWater?: boolean;
   ingredients: Ingredient[];
 }
 
 export interface ComputedProduct extends ProductSpec {
+  hasWater: boolean;
   overheadCost: number;
   activePctSum: number;
   waterPct: number;
